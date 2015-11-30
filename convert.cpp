@@ -1,21 +1,56 @@
-#include <boost/gil/image.hpp>
-#include <boost/gil/typedefs.hpp>
-#include <boost/gil/extension/io/jpeg_io.hpp>
-
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <stdlib.h>
 
-using namespace boost::gil;
+using namespace std;
  
 const string MAZEPATH = "Mazes/";
 
-
 int main() {
+  cout << MAZEPATH + "SampleMaze1.jpg" << endl;
 
-  rgb8_image_t img;
-  jpeg_read_image(MAZEPATH + "SampleMaze1.jpg",img);
+  ifstream image;
+  ifstream image2;
+  ofstream binaryImage;
+  ofstream binaryImage2;
 
-  gray8s_view_t view(img.dimensions());
-  color_converted_view<gray8_pixel_t>(const_view(img), view);
+  string imagePathS = MAZEPATH + "SampleMaze1.jpg"; 
+  char *imagePathC = new char[imagePathS.length() + 1];
+  strcpy(imagePathC, imagePathS.c_str());
 
-  jpeg_write_view(MAZEPATH + "grey1.jpg", view);
- }
+  image.open(imagePathC, fstream::in);
+  image2.open("Mazes/SampleMaze2.png", fstream::in);
+
+  if (!image || !image2) {
+    cout << "Error opening image" << endl;
+    return -1;
+  }
+
+  binaryImage.open("abcTestBinary.txt", fstream::out);
+  binaryImage2.open("abcTestBinary2.txt", fstream::out);
+  while(image.good()) {
+    int c = abs((unsigned int) image.get());
+    if (!image) {
+      break;
+    }
+    binaryImage << c;
+    binaryImage << " ";
+  }
+
+  while(image2.good()) {
+    int c = abs((unsigned int) image2.get());
+    if (!image2) {
+      break;
+    }
+    binaryImage2 << c;
+    binaryImage2 << " ";
+  }
+  
+  image.close();
+  image2.close();
+  binaryImage.close();
+  binaryImage2.close();
+  return 0;
+}

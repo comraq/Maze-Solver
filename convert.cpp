@@ -1,5 +1,7 @@
 #include "convert.hpp"
 
+#include <iostream>
+
 Mat convert(String mazeName) {
   string imagePath = MAZEPATH + mazeName;
 
@@ -15,9 +17,9 @@ Mat convert(String mazeName) {
   threshold(bwImage, binImage, 127, 255, CV_THRESH_BINARY); //Convert grayscale to binary
 
   int startRow, startCol, endRow, endCol;
-  findStart(binImage, &startRow, &startCol);
-  findEnd(binImage, &endRow, &endCol);
-  cropImage = binImage(Range(startRow, endRow + 1), Range(startCol, endCol + 3)); //Cropping the image, removing excess borders around the maze
+  findTopLeft(binImage, &startRow, &startCol);
+  findBottomRight(binImage, &endRow, &endCol);
+  cropImage = binImage(Range(startRow, endRow), Range(startCol, endCol)); //Cropping the image, removing excess borders around the maze
 
   //Saving the intermediate images
   imwrite(MAZEPATH + "Binary" + mazeName, binImage);
@@ -26,35 +28,30 @@ Mat convert(String mazeName) {
   return cropImage;
 }
 
-void findStart(Mat image, int* row, int* col) {
-  int r, g, b;
-  for (int i = 0; i < image.cols; i++) {
-    for (int j = 0; j < image.rows; j++) {
-      r = (int)image.data[image.cols * j + i];
-      g = (int)image.data[image.cols * j + i + 1];
-      b = (int)image.data[image.cols * j + i + 2];
-      if (!r && !g && !b) {
-        //RGB values are (0, 0, 0) indicating a black pixel
-        *row = j;
-        *col = i;
+void findTopLeft(Mat image, int* row, int* col) {
+  int pixel;
+  for (int r = 0; r < image.rows; ++r) {
+    for (int c = 0; c < image.cols; ++c) {
+      pixel = (int)image.data[image.cols * r + c];
+      if (!pixel) {
+        //Pixel intensity is 0 indicating a black pixel
+        *row = r;
+        *col = c;
         return;
       }
     }
   }
 }
 
-void findEnd(Mat image, int* row, int* col) {
-  int r, g, b;
-  int end[2]; 
-  for (int i = image.cols - 1; i > 0; i--) {
-    for (int j = image.rows - 1; j > 0; j--) {
-      r = (int)image.data[image.cols * j + i];
-      g = (int)image.data[image.cols * j + i + 1];
-      b = (int)image.data[image.cols * j + i + 2];
-      if (!r && !g && !b) {
-        //RGB values are (0, 0, 0) indicating a black pixel
-        *row = j;
-        *col = i;
+void findBottomRight(Mat image, int* row, int* col) {
+  int pixel;
+  for (int r = image.rows - 1; r >= 0; --r) {
+    for (int c = image.cols - 1; c >= 0; --c) {
+      pixel = (int)image.data[image.cols * r + c];
+      if (!pixel) {
+        //Pixel intensity is 0 indicating a black pixel
+        *row = r;
+        *col = c;
         return;
       }
     }

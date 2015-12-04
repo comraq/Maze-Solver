@@ -3,18 +3,25 @@
 #include <utility>
 
 #include "Convert.hpp"
-#include "MazePixel.hpp"
 
-const int DEADEND = 100;
+const int SOLUTION = 100;
 const int VISITED = 200;
 //const int WALL = 0;
 const int AVAILABLE = 255;
 
-MazePixel* findEntrance(Mat);
+const int ABOVE = 1;
+const int BELOW = 2;
+const int LEFT = 3;
+const int RIGHT = 4;
+
+const int NUM_ADJACENT = 4;
+
+void findEntrance(Mat, pair<int, int>&);
 void getAdjacent(Mat, int, int, int[]);
+void traceSolution(Mat, int, int);
 
 int main() {
-  string mazeName = "SampleMaze1.png";
+  string mazeName = "SampleMaze4.png";
 
   Mat maze = convert(mazeName);
   if (maze.empty()) {
@@ -22,64 +29,72 @@ int main() {
     return -1;
   }
   
-  queue<MazePixel*> pixelQueue;
-  int row, col, queueSize;
-  int adjacent[4];
-  MazePixel* pixel = findEntrance(maze);
-  if (!pixel) {
+  queue<pair<int, int>> pixelQueue;
+  int row, col;
+  int adjacent[NUM_ADJACENT];
+  pair<int, int> pixel;
+  findEntrance(maze, pixel);
+  if (pixel.first == -1) {
     cout << "Maze entrance not found in top row or left column!" << endl;
     return -1;
   }
   pixelQueue.push(pixel); 
-  maze.data[maze.cols*pixel->getRow()+ pixel->getCol()] = VISITED;
+  maze.data[maze.cols*(pixel.first) + pixel.second] = VISITED;
   while (!pixelQueue.empty()) {
     pixel = pixelQueue.front();
     pixelQueue.pop();
-    row = pixel->getRow();
-    col = pixel->getCol();
+    row = pixel.first;
+    col = pixel.second;
 
-    if (row == maze.rows - 1) {
+    if (row == maze.rows - 1 || col == maze.cols - 1) {
       break;
     }
 
-    //queueSize = pixelQueue.size();
-    
     getAdjacent(maze, row, col, adjacent);
     if (adjacent[0] == AVAILABLE) {
-      pixelQueue.push(new MazePixel(row - 1, col, pixel));
-      maze.data[maze.cols*(row - 1) + col] = VISITED;
+      pixelQueue.push(make_pair(row - 1, col));
+      maze.data[maze.cols*(row - 1) + col] = VISITED + BELOW;
     }
     if (adjacent[1] == AVAILABLE) {
-      pixelQueue.push(new MazePixel(row + 1, col, pixel));
-      maze.data[maze.cols*(row + 1) + col] = VISITED;
+      pixelQueue.push(make_pair(row + 1, col));
+      maze.data[maze.cols*(row + 1) + col] = VISITED + ABOVE;
     }
     if (adjacent[2] == AVAILABLE) {
-      pixelQueue.push(new MazePixel(row, col - 1, pixel));
-      maze.data[maze.cols*row + (col - 1)] = VISITED;
+      pixelQueue.push(make_pair(row, col - 1));
+      maze.data[maze.cols*row + (col - 1)] = VISITED + RIGHT;
     }
     if (adjacent[3] == AVAILABLE) {
-      pixelQueue.push(new MazePixel(row, col + 1, pixel));
-      maze.data[maze.cols*row + (col + 1)] = VISITED;
+      pixelQueue.push(make_pair(row, col + 1)); 
+      maze.data[maze.cols*row + (col + 1)] = VISITED + LEFT;
     }
-
-    /*if (queueSize == pixelQueue.size()) {
-      markDead(maze, pixel);
-    }*/
-    delete pixel;
   }
 
+  traceSolution(maze, row, col);
   cv::imwrite(MAZEPATH + "Cropped" + mazeName, maze);
   return 0;
 }
 
-/*void markDead(Mat maze, MazePixel* pixel) {
-  int row = pixel->getRow();
-  int col = pixel->getCol();
-  int prevRow = pixel->getPrevRow();
-  int prevCol = pixel->getPrevCol();
-  maze.data[maze.cols*row + col] = DEADEND;
-  getAdjacent(pixel, above, below, left, right);
-}*/
+void findEntrance(Mat maze, pair<int, int>& pixel) {
+  int data;
+  for (int c = 0; c < maze.cols; ++c) {
+    data = (int)maze.data[c];
+    if (data == AVAILABLE) {
+      //Entrance found in top row
+      pixel = make_pair(0, c);
+      return;
+    }
+  }
+  for (int r = 0; r < maze.rows; ++r) {
+    data = (int)maze.data[maze.cols * r];
+    if (data == AVAILABLE) {
+      //Entrance found in left col
+      pixel = make_pair(r, 0);
+      return;
+    }
+  }
+  pixel = make_pair(-1, -1);
+  return;
+}
 
 void getAdjacent(Mat maze, int row, int col, int adjacent[]) {
   adjacent[0] = (row > 0)? (int)maze.data[maze.cols * (row - 1) + col] : 0;
@@ -88,21 +103,20 @@ void getAdjacent(Mat maze, int row, int col, int adjacent[]) {
   adjacent[3] = (col < maze.cols - 1)? (int)maze.data[maze.cols * row + (col + 1)] : 0;
 }
 
-MazePixel* findEntrance(Mat maze) {
-  int data;
-  for (int c = 0; c < maze.cols; ++c) {
-    data = (int)maze.data[c];
-    if (data == AVAILABLE) {
-      //Entrance found in top row
-      return new MazePixel(0, c);
+void traceSolution(Mat maze, int row, int col) {
+  //Tail recursive versions of this method will lead to stack overflow
+  int prev;
+  do {
+    prev = (int)maze.data[maze.cols*row + col] - VISITED;
+    maze.data[maze.cols*row + col] = SOLUTION;
+    if (prev == ABOVE) {
+      --row;
+    } else if (prev == BELOW) {
+      ++row;
+    } else if (prev == LEFT) {
+      --col;
+    } else if (prev == RIGHT) {
+      ++col;
     }
-  }
-  for (int r = 0; r < maze.rows; ++r) {
-    data = (int)maze.data[maze.cols * r];
-    if (data == AVAILABLE) {
-      //Entrance found in left col
-      return new MazePixel(r, 0);
-    }
-  }
-  return NULL;
+  } while (prev != 0);
 }

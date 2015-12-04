@@ -12,7 +12,7 @@ using namespace cv;
 const string MAZEPATH = "Mazes/";
 
 Mat convert(String);
-void findTopLeft(Mat, int*, int*);
-void findBottomRight(Mat, int*, int*);
+void findTopLeft(Mat, int&, int&);
+void findBottomRight(Mat, int&, int&);
 
 #endif

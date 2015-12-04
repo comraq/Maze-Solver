@@ -1,6 +1,4 @@
-#include "convert.hpp"
-
-#include <iostream>
+#include "Convert.hpp"
 
 Mat convert(String mazeName) {
   string imagePath = MAZEPATH + mazeName;
@@ -10,16 +8,15 @@ Mat convert(String mazeName) {
     return sourceImage;
   }
 
-  Mat bwImage;
-  Mat binImage;
-  Mat cropImage;
+  Mat bwImage, binImage, cropRef, cropImage;
   cvtColor(sourceImage, bwImage, CV_BGR2GRAY); //Convert original image to grayscale
   threshold(bwImage, binImage, 127, 255, CV_THRESH_BINARY); //Convert grayscale to binary
 
   int startRow, startCol, endRow, endCol;
-  findTopLeft(binImage, &startRow, &startCol);
-  findBottomRight(binImage, &endRow, &endCol);
-  cropImage = binImage(Range(startRow, endRow), Range(startCol, endCol)); //Cropping the image, removing excess borders around the maze
+  findTopLeft(binImage, startRow, startCol);
+  findBottomRight(binImage, endRow, endCol);
+  cropRef = binImage(Range(startRow, endRow + 1), Range(startCol, endCol + 1)); //Cropping the image, removing excess borders around the maze
+  cropRef.copyTo(cropImage);
 
   //Saving the intermediate images
   imwrite(MAZEPATH + "Binary" + mazeName, binImage);
@@ -28,30 +25,30 @@ Mat convert(String mazeName) {
   return cropImage;
 }
 
-void findTopLeft(Mat image, int* row, int* col) {
+void findTopLeft(Mat image, int& row, int& col) {
   int pixel;
   for (int r = 0; r < image.rows; ++r) {
     for (int c = 0; c < image.cols; ++c) {
       pixel = (int)image.data[image.cols * r + c];
       if (!pixel) {
         //Pixel intensity is 0 indicating a black pixel
-        *row = r;
-        *col = c;
+        row = r;
+        col = c;
         return;
       }
     }
   }
 }
 
-void findBottomRight(Mat image, int* row, int* col) {
+void findBottomRight(Mat image, int& row, int& col) {
   int pixel;
   for (int r = image.rows - 1; r >= 0; --r) {
     for (int c = image.cols - 1; c >= 0; --c) {
       pixel = (int)image.data[image.cols * r + c];
       if (!pixel) {
         //Pixel intensity is 0 indicating a black pixel
-        *row = r;
-        *col = c;
+        row = r;
+        col = c;
         return;
       }
     }

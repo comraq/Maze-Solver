@@ -12,6 +12,10 @@
 using namespace std;
 using namespace cv;
 
+const int BLUE = 0;
+const int GREEN = 1;
+const int RED = 2;
+
 class Maze {
   public:
     Maze(string);
@@ -29,7 +33,7 @@ class Maze {
     const int RIGHT = 3;
 
     static const int NUM_ADJACENT = 4;
-
+    
     const string MAZEPATH = "Mazes/";
 
     bool isEmpty();
@@ -37,19 +41,24 @@ class Maze {
 
     void solve();
     void save();
+    void save(string);
+    void save(int);
+    void save(string, int);
     void setName(string);
 
   private:
     Mat sourceImage, processedImage;
     string name;
-    int prcRows, prcCols, offsetRow, offsetCol;
+    int srcRows, srcCols, prcRows, prcCols, offsetRow, offsetCol, exitRow, exitCol;
 
     void convert();
     void findEntrance(pair<int, int>&);
     void getAdjacent(int, int, int[]);
-    void traceSolution(int, int);
+    void traceSolution(int, int, int);
     void findTopLeft(Mat, int&, int&);
     void findBottomRight(Mat, int&, int&);
+    void colourSource(int, int, int);
+    void save(Mat, string, int);
 };
 
 #endif

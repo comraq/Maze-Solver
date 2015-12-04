@@ -10,6 +10,7 @@ int main() {
   }
 
   maze->solve();
-  maze->save();
+  maze->save(GREEN);
+  delete maze;
   return 0;
 }

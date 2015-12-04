@@ -3,9 +3,13 @@
 Maze::Maze(string name) {
   this->name = name;
   sourceImage = imread(MAZEPATH + name);
+  srcRows = sourceImage.rows;
+  srcCols = sourceImage.cols;
   convert();
   prcRows = processedImage.rows;
   prcCols = processedImage.cols;
+  exitRow = -1;
+  exitCol = -1;
 }
 
 bool Maze::isEmpty() {
@@ -55,7 +59,24 @@ void Maze::findBottomRight(Mat image, int& row, int& col) {
 }
 
 void Maze::save() {
-  imwrite(MAZEPATH + "Solved" + name, processedImage);
+  save(sourceImage, name, RED);
+}
+
+void Maze::save(string name) {
+  save(sourceImage, name, RED);
+}
+
+void Maze::save(int colour) {
+    save(sourceImage, name, colour);
+}
+
+void Maze::save(Mat image, string name, int colour) {
+  if (exitRow == -1) {
+    cout << "Maze not yet solved!" << endl;
+  } else {
+    traceSolution(exitRow, exitCol, colour);
+    imwrite(MAZEPATH + "Solved" + name, image);
+  }
 }
 
 void Maze::setName(string name) {
@@ -85,7 +106,8 @@ void Maze::solve() {
     col = pixel.second;
 
     if (row == prcRows - 1 || col == prcCols - 1) {
-      traceSolution(row, col);
+      exitRow = row;
+      exitCol = col;
       return;
     }
 
@@ -138,12 +160,12 @@ void Maze::getAdjacent(int row, int col, int adjacent[]) {
   adjacent[RIGHT] = (col < prcCols - 1) ? (int)processedImage.data[prcCols * row + (col + 1)] : WALL;
 }
 
-void Maze::traceSolution(int row, int col) {
+void Maze::traceSolution(int row, int col, int colour) {
   //Tail recursive versions of this method will lead to stack overflow
   int prev;
   do {
     prev = (int)processedImage.data[prcCols*row + col] - VISITED;
-    processedImage.data[prcCols*row + col] = SOLUTION;
+    colourSource(row, col, colour);
     if (prev == ABOVE) {
       --row;
     } else if (prev == BELOW) {
@@ -154,6 +176,12 @@ void Maze::traceSolution(int row, int col) {
       ++col;
     }
   } while (prev != START);
+}
+
+void Maze::colourSource(int row, int col, int colour) {
+  for (int i = 0; i < 3; ++i) {
+    sourceImage.data[srcCols*(row + offsetRow) * 3 + (col + offsetCol) * 3 + i] = (i == colour) ? 255 : 0;
+  }
 }
 
 Maze::~Maze() {

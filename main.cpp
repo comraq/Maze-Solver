@@ -1,7 +1,12 @@
 #include "Maze.hpp"
 
+/* This program parses a black/white image of a maze and saves a copy of the the solved maze with one of the following three colours:
+ * - BLUE / GREEN / RED
+ * The image file which this programs looks for is located in the path 'Mazes/' with the file name specified by the string mazeName.
+ */
+
 int main() {
-  string mazeName = "SampleMaze1.png";
+  string mazeName = "SampleMaze2.png"; //This specifies the file name
 
   Maze* maze = new Maze(mazeName);
   if(maze->isEmpty()) {
@@ -10,7 +15,7 @@ int main() {
   }
 
   maze->solve();
-  maze->save(GREEN);
+  maze->save(BLUE); //This saves the the solved maze with the solution path highlighted in the colour specified
   delete maze;
   return 0;
 }

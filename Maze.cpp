@@ -1,5 +1,7 @@
 #include "Maze.hpp"
 
+/* Constructor and Destructor */
+
 Maze::Maze(string name) {
   this->name = name;
   sourceImage = imread(MAZEPATH + name);
@@ -12,9 +14,90 @@ Maze::Maze(string name) {
   exitCol = -1;
 }
 
+Maze::~Maze() {
+  //Nothing extra to cleanup
+}
+
+/* Public methods */
+
 bool Maze::isEmpty() {
   return sourceImage.empty();
 }
+
+string Maze::getName() {
+  return name;
+}
+
+void Maze::setName(string name) {
+  this->name = name;
+}
+
+void Maze::solve() {
+  queue<pair<int, int>> pixelQueue;
+  int row, col;
+  int adjacent[NUM_ADJACENT];
+  pair<int, int> pixel;
+  findEntrance(pixel.first, pixel.second);
+  if (pixel.first == -1) {
+    cout << "Maze entrance not found in top row or left column!" << endl;
+    return;
+  }
+  pixelQueue.push(pixel);
+  processedImage.data[prcCols*(pixel.first) + pixel.second] = VISITED + START;
+  while (!pixelQueue.empty()) {
+    pixel = pixelQueue.front();
+    pixelQueue.pop();
+    row = pixel.first;
+    col = pixel.second;
+
+    if (row == prcRows - 1 || col == prcCols - 1) {
+      exitRow = row;
+      exitCol = col;
+      return;
+    }
+
+    getAdjacent(row, col, adjacent);
+    if (adjacent[ABOVE] == AVAILABLE) {
+      pixelQueue.push(make_pair(row - 1, col));
+      processedImage.data[prcCols*(row - 1) + col] = VISITED + BELOW;
+    }
+    if (adjacent[BELOW] == AVAILABLE) {
+      pixelQueue.push(make_pair(row + 1, col));
+      processedImage.data[prcCols*(row + 1) + col] = VISITED + ABOVE;
+    }
+    if (adjacent[LEFT] == AVAILABLE) {
+      pixelQueue.push(make_pair(row, col - 1));
+      processedImage.data[prcCols*row + (col - 1)] = VISITED + RIGHT;
+    }
+    if (adjacent[RIGHT] == AVAILABLE) {
+      pixelQueue.push(make_pair(row, col + 1));
+      processedImage.data[prcCols*row + (col + 1)] = VISITED + LEFT;
+    }
+  }
+}
+
+void Maze::save() {
+  save(name, RED);
+}
+
+void Maze::save(string name) {
+  save(name, RED);
+}
+
+void Maze::save(int colour) {
+  save(name, colour);
+}
+
+void Maze::save(string name, int colour) {
+  if (exitRow == -1) {
+    cout << "Maze not yet solved!" << endl;
+  } else {
+    traceSolution(exitRow, exitCol, colour);
+    imwrite(MAZEPATH + "Solved" + name, sourceImage);
+  }
+}
+
+/* Below are private methods */
 
 void Maze::convert() {
   Mat temp;
@@ -58,86 +141,15 @@ void Maze::findBottomRight(Mat image, int& row, int& col) {
   }
 }
 
-void Maze::save() {
-  save(sourceImage, name, RED);
-}
 
-void Maze::save(string name) {
-  save(sourceImage, name, RED);
-}
-
-void Maze::save(int colour) {
-    save(sourceImage, name, colour);
-}
-
-void Maze::save(Mat image, string name, int colour) {
-  if (exitRow == -1) {
-    cout << "Maze not yet solved!" << endl;
-  } else {
-    traceSolution(exitRow, exitCol, colour);
-    imwrite(MAZEPATH + "Solved" + name, image);
-  }
-}
-
-void Maze::setName(string name) {
-  this->name = name;
-}
-
-string Maze::getName() {
-  return name;
-}
-
-void Maze::solve() {
-  queue<pair<int, int>> pixelQueue;
-  int row, col;
-  int adjacent[NUM_ADJACENT];
-  pair<int, int> pixel;
-  findEntrance(pixel);
-  if (pixel.first == -1) {
-    cout << "Maze entrance not found in top row or left column!" << endl;
-    return;
-  }
-  pixelQueue.push(pixel);
-  processedImage.data[prcCols*(pixel.first) + pixel.second] = VISITED + START;
-  while (!pixelQueue.empty()) {
-    pixel = pixelQueue.front();
-    pixelQueue.pop();
-    row = pixel.first;
-    col = pixel.second;
-
-    if (row == prcRows - 1 || col == prcCols - 1) {
-      exitRow = row;
-      exitCol = col;
-      return;
-    }
-
-    getAdjacent(row, col, adjacent);
-    if (adjacent[ABOVE] == AVAILABLE) {
-      pixelQueue.push(make_pair(row - 1, col));
-      processedImage.data[prcCols*(row - 1) + col] = VISITED + BELOW;
-    }
-    if (adjacent[BELOW] == AVAILABLE) {
-      pixelQueue.push(make_pair(row + 1, col));
-      processedImage.data[prcCols*(row + 1) + col] = VISITED + ABOVE;
-    }
-    if (adjacent[LEFT] == AVAILABLE) {
-      pixelQueue.push(make_pair(row, col - 1));
-      processedImage.data[prcCols*row + (col - 1)] = VISITED + RIGHT;
-    }
-    if (adjacent[RIGHT] == AVAILABLE) {
-      pixelQueue.push(make_pair(row, col + 1));
-      processedImage.data[prcCols*row + (col + 1)] = VISITED + LEFT;
-    }
-  }
-}
-
-void Maze::findEntrance(pair<int, int>& pixel) {
+void Maze::findEntrance(int& row, int& col) {
   int data;
   for (int c = 0; c < prcCols; ++c) {
     data = (int)processedImage.data[c];
     if (data == AVAILABLE) {
       //Entrance found in top row
-      pixel = make_pair(0, c);
+      row = 0;
+      col = c;
       return;
     }
   }
@@ -145,11 +157,13 @@ void Maze::findEntrance(pair<int, int>& pixel) {
     data = (int)processedImage.data[prcCols * r];
     if (data == AVAILABLE) {
       //Entrance found in left col
-      pixel = make_pair(r, 0);
+      row = r;
+      col = 0;
       return;
     }
   }
-  pixel = make_pair(-1, -1);
+  row = -1;
+  col = -1;
   return;
 }
 
@@ -182,8 +196,4 @@ void Maze::colourSource(int row, int col, int colour) {
   for (int i = 0; i < 3; ++i) {
     sourceImage.data[srcCols*(row + offsetRow) * 3 + (col + offsetCol) * 3 + i] = (i == colour) ? 255 : 0;
   }
-}
-
-Maze::~Maze() {
-  //Nothing extra to cleanup
 }

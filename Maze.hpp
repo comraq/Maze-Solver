@@ -16,6 +16,8 @@ const int BLUE = 0;
 const int GREEN = 1;
 const int RED = 2;
 
+const int NUM_ADJACENT = 4;
+
 class Maze {
   public:
     Maze(string);
@@ -31,20 +33,18 @@ class Maze {
     const int BELOW = 1;
     const int LEFT = 2;
     const int RIGHT = 3;
-
-    static const int NUM_ADJACENT = 4;
     
     const string MAZEPATH = "Mazes/";
 
     bool isEmpty();
     string getName();
+    void setName(string);
 
     void solve();
     void save();
     void save(string);
     void save(int);
     void save(string, int);
-    void setName(string);
 
   private:
     Mat sourceImage, processedImage;
@@ -52,13 +52,12 @@ class Maze {
     int srcRows, srcCols, prcRows, prcCols, offsetRow, offsetCol, exitRow, exitCol;
 
     void convert();
-    void findEntrance(pair<int, int>&);
-    void getAdjacent(int, int, int[]);
-    void traceSolution(int, int, int);
     void findTopLeft(Mat, int&, int&);
     void findBottomRight(Mat, int&, int&);
+    void findEntrance(int&, int&);
+    void getAdjacent(int, int, int[]);
+    void traceSolution(int, int, int);
     void colourSource(int, int, int);
-    void save(Mat, string, int);
 };
 
 #endif

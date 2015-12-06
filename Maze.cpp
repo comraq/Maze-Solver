@@ -179,7 +179,7 @@ void Maze::traceSolution(int row, int col, int colour) {
   int prev;
   do {
     prev = (int)processedImage.data[prcCols*row + col] - VISITED;
-    colourSource(row, col, colour);
+    colourSource(row, col, colour, prev);
     if (prev == ABOVE) {
       --row;
     } else if (prev == BELOW) {
@@ -192,8 +192,42 @@ void Maze::traceSolution(int row, int col, int colour) {
   } while (prev != START);
 }
 
-void Maze::colourSource(int row, int col, int colour) {
-  for (int i = 0; i < 3; ++i) {
-    sourceImage.data[srcCols*(row + offsetRow) * 3 + (col + offsetCol) * 3 + i] = (i == colour) ? 255 : 0;
+void Maze::colourSource(int row, int col, int colour, int prev) {
+  int r = row - SOLUTION_WIDTH + 1;
+  int c = col - SOLUTION_WIDTH + 1;
+  if (prev == ABOVE || prev == BELOW) {
+    for (int j = 1; j <= SOLUTION_WIDTH; ++j) {
+      if ((int)processedImage.data[prcCols*row + (col - j)] == WALL) {
+        c = col - j + 1;
+        break;
+      } 
+    }
+    for (int j = 0; j < SOLUTION_WIDTH; ++j) {
+      if ((int)processedImage.data[prcCols*row + (c + j)] == WALL) {
+        break;
+      }
+      for (int i = 0; i < 3; ++i) {
+        sourceImage.data[srcCols*(row + offsetRow) * 3 + (c + offsetCol + j) * 3 + i] = (i == colour) ? 255 : 0;
+      }
+    }
+  } else if (prev == LEFT || prev == RIGHT) {
+    for (int j = 1; j <= SOLUTION_WIDTH; ++j) {
+      if ((int)processedImage.data[prcCols*(row - j) + col] == WALL) {
+        r = row - j + 1;
+        break;
+      }
+    }
+    for (int j = 0; j < SOLUTION_WIDTH; ++j) {
+      if ((int)processedImage.data[prcCols*(r + j) + col] == WALL) {
+        break;
+      }
+      for (int i = 0; i < 3; ++i) {
+        sourceImage.data[srcCols*(r + offsetRow + j) * 3 + (col + offsetCol) * 3 + i] = (i == colour) ? 255 : 0;
+      }
+    }
+  } else {
+    for (int i = 0; i < 3; ++i) {
+      sourceImage.data[srcCols*(row + offsetRow) * 3 + (col + offsetCol) * 3 + i] = (i == colour) ? 255 : 0;
+    }
   }
 }

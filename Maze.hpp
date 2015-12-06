@@ -34,6 +34,8 @@ class Maze {
     const int LEFT = 2;
     const int RIGHT = 3;
     
+    const int SOLUTION_WIDTH = 5;
+
     const string MAZEPATH = "Mazes/";
 
     bool isEmpty();
@@ -57,7 +59,7 @@ class Maze {
     void findEntrance(int&, int&);
     void getAdjacent(int, int, int[]);
     void traceSolution(int, int, int);
-    void colourSource(int, int, int);
+    void colourSource(int, int, int, int);
 };
 
 #endif

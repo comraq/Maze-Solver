@@ -6,7 +6,7 @@
  */
 
 int main() {
-  string mazeName = "SampleMaze2.png"; //This specifies the file name
+  string mazeName = "SampleMaze4.png"; //This specifies the file name
 
   Maze* maze = new Maze(mazeName);
   if(maze->isEmpty()) {
@@ -15,7 +15,7 @@ int main() {
   }
 
   maze->solve();
-  maze->save(BLUE); //This saves the the solved maze with the solution path highlighted in the colour specified
+  maze->save(RED); //This saves the the solved maze with the solution path highlighted in the colour specified
   delete maze;
   return 0;
 }
